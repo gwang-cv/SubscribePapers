@@ -45,11 +45,12 @@ def get_email_content():
 
     papertile=''
     paperlink=''
+    paper=''
     # judge the path exists or not
     for indx in range(0, len(cons1)):
         href = 'http://arxiv.org' + cons1[indx]
         title = cons2[2 * indx + 1]
-        paper=paper+'<tr><td>{0}</td><td><a href="{1}">{2}</td></tr>'.fromat(indx+1,href, title)
+        paper=paper+'<tr><td>{0}</td><td><a href="{1}">{2}</td></tr>'.format(indx+1,href, title)
 
     html = """
         <html lang="en">
