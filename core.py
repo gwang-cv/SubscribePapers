@@ -16,8 +16,8 @@ from receivers import MAIL_RECEIVER
 START_URL = "https://github.com/ruanyf/weekly"
 HEADERS = {
     "X-Requested-With": "XMLHttpRequest",
-    # "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 "
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 "
+    #"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
     "(KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36",
 }
 
@@ -69,10 +69,11 @@ def send_email():
     if not is_saturday():
         return
 
-    content = get_email_content()
-    message = MIMEText(content, "html", MAIL_ENCODING)
-    message["From"] = Header("weekly-bot", MAIL_ENCODING)
-    message["To"] = Header("Reader")
+    content = 'test' #get_email_content()
+    message = MIMEText(content, "plain", MAIL_ENCODING)
+    #message = MIMEText(content, "html", MAIL_ENCODING)
+    message["From"] = MAIL_SENDER #Header("weekly-bot", MAIL_ENCODING)
+    message["To"] = MAIL_RECEIVER #Header("Reader")
     message["Subject"] = Header("weekly", MAIL_ENCODING)
     try:
         smtp_obj = smtplib.SMTP_SSL(MAIL_HOST)
