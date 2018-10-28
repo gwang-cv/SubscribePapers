@@ -7,45 +7,49 @@ import re
 import smtplib
 from email.header import Header
 from email.mime.text import MIMEText
-
 import requests
+from lxml import etree
+import os
+import time
+import re
+from multiprocessing.dummy import Pool
 from tenacity import retry, stop_after_attempt
 
-from receivers import MAIL_RECEIVER
 
-START_URL = "https://github.com/ruanyf/weekly"
-HEADERS = {
-    "X-Requested-With": "XMLHttpRequest",
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 "
-    #"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
-    "(KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36",
-}
-
-# 隐私数据存放在环境变量中
 MAIL_HOST = os.environ.get("MAIL_HOST")
 MAIL_USER = os.environ.get("MAIL_USER")
 MAIL_PASS = os.environ.get("MAIL_PASS")
 MAIL_SENDER = os.environ.get("MAIL_SENDER")
-
+MAIL_RECEIVER = os.environ.get("MAIL_RECEIVER")
 
 MAIL_ENCODING = "utf8"
 
-
-def is_saturday():
-    """
-    判断是否周六
-    """
-    return datetime.datetime.now().weekday() == 6
-
-
 @retry(stop=stop_after_attempt(3))
 def get_email_content():
-    """
-    获取邮件内容
-    """
-    resp = requests.get(START_URL, headers=HEADERS).text
-    result = re.findall(r'<a href="(.*?\.md)">(.*?)</a>', resp)
-    url, num = result[0]
+
+
+    ######################################## main ########################################
+    url0 = 'http://arxiv.org/list/cs.CV/recent'
+    # print url0
+    # xpath of each page
+    xp1 = '//dl[1]//*[@class="list-identifier"]//a[2]//@href'  # pdf href list
+    xp2 = '//dl[1]//*[@class="list-title mathjax"]/text()'  # Title: Object Boundary Guided Semantic Segmentation
+    xp_date = '//*[@id="dlpage"]/h3[1]/text()'  # date->folder
+
+    htm0 = getHtml(url0)
+    cons1 = getContent(htm0, xp1)  # get pdfs' href
+    cons2 = getContent(htm0, xp2)  # get papers' title
+    cons_date = getContent(htm0, xp_date)  # get date
+
+    folder = cons_date[0].split(', ')  # get date string
+
+    papertile=''
+    paperlink=''
+    # judge the path exists or not
+    for indx in range(0, len(cons1)):
+        href = 'http://arxiv.org' + cons1[indx]
+        title = cons2[2 * indx + 1]
+        paper=paper+'<tr><td>{0}</td><td><a href="{1}">{2}</td></tr>'.fromat(indx+1,href, title)
 
     html = """
         <html lang="en">
@@ -54,27 +58,23 @@ def get_email_content():
         </head>
         <body>
             <div>
-                <a href="{0}">📅 阮一峰技术周刊{1}</a>
+                <table border="1">
+                {0}
+                </table>
             <div>
         </body>
         </html>
     """
-    return html.format("https://github.com/" + url, num)
+    return html.format(paper)
 
 
 def send_email():
-    """
-    发送邮件
-    """
-    if not is_saturday():
-        return
 
-    content = 'test' #get_email_content()
-    message = MIMEText(content, "plain", MAIL_ENCODING)
-    #message = MIMEText(content, "html", MAIL_ENCODING)
-    message["From"] = MAIL_SENDER #Header("weekly-bot", MAIL_ENCODING)
+    content = get_email_content()
+    message = MIMEText(content, "html", MAIL_ENCODING)
+    message["From"] = MAIL_SENDER #Header("paper", MAIL_ENCODING)
     message["To"] = MAIL_RECEIVER #Header("Reader")
-    message["Subject"] = Header("weekly", MAIL_ENCODING)
+    message["Subject"] = Header("SubscribePaper", MAIL_ENCODING)
     try:
         smtp_obj = smtplib.SMTP_SSL(MAIL_HOST)
         smtp_obj.login(MAIL_USER, MAIL_PASS)
@@ -82,6 +82,18 @@ def send_email():
         smtp_obj.quit()
     except Exception as e:
         print(e)
+
+
+def getHtml(url):
+    html = requests.get(url).content
+    selector = etree.HTML(html)
+    return selector
+
+
+def getContent(htm, xpathStr):
+    selector = htm
+    content = selector.xpath(xpathStr)  # copy from chrome # print content
+    return content
 
 
 if __name__ == "__main__":

@@ -1,11 +1,5 @@
 language: python
 sudo: enabled
-notifications:
-  email:
-    recipients:
-      - gwang.cv@outlook.com
-    on_success: change # default: change
-    on_failure: always # default: always
 python:
   - 2.7
 before_install:
