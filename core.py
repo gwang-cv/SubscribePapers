@@ -59,7 +59,7 @@ def get_email_content():
      <html>
         <head> {0} </hdead>
         <body>
-        <table cellspacing="0" >
+        <table cellspacing="0" border="1">
                 {1}
         </table>
         </body>
