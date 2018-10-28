@@ -13,7 +13,7 @@ import os
 import time
 import re
 from multiprocessing.dummy import Pool
-from tenacity import retry, stop_after_attempt
+# from tenacity import retry, stop_after_attempt
 
 
 MAIL_HOST = os.environ.get("MAIL_HOST")
@@ -24,7 +24,7 @@ MAIL_RECEIVER = os.environ.get("MAIL_RECEIVER")
 
 MAIL_ENCODING = "utf8"
 
-@retry(stop=stop_after_attempt(3))
+# @retry(stop=stop_after_attempt(3))
 def get_email_content():
 
 
