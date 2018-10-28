@@ -16,7 +16,8 @@ from receivers import MAIL_RECEIVER
 START_URL = "https://github.com/ruanyf/weekly"
 HEADERS = {
     "X-Requested-With": "XMLHttpRequest",
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 "
+    # "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 "
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
     "(KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36",
 }
 
@@ -26,6 +27,7 @@ MAIL_USER = os.environ.get("MAIL_USER")
 MAIL_PASS = os.environ.get("MAIL_PASS")
 MAIL_SENDER = os.environ.get("MAIL_SENDER")
 
+
 MAIL_ENCODING = "utf8"
 
 
@@ -33,7 +35,7 @@ def is_saturday():
     """
     判断是否周六
     """
-    return datetime.datetime.now().weekday() == 5
+    return datetime.datetime.now().weekday() == 6
 
 
 @retry(stop=stop_after_attempt(3))
