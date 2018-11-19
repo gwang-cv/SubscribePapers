@@ -13,6 +13,7 @@ import os
 import time
 import re
 from multiprocessing.dummy import Pool
+# from tenacity import retry, stop_after_attempt
 
 
 MAIL_HOST = os.environ.get("MAIL_HOST")
@@ -20,7 +21,6 @@ MAIL_USER = os.environ.get("MAIL_USER")
 MAIL_PASS = os.environ.get("MAIL_PASS")
 MAIL_SENDER = os.environ.get("MAIL_SENDER")
 MAIL_RECEIVER = os.environ.get("MAIL_RECEIVER")
-PORT_DATE = os.environ.get("PORT_DATE")
 
 MAIL_ENCODING = "utf8"
 
@@ -29,33 +29,42 @@ def get_email_content():
 
 
     ######################################## main ########################################
-    url0 = 'https://doub.io/sszhfx'
-    xp1 = '/html/body/section/div[3]/div/div[1]/div[1]/div[3]/span/strong'  
-    xp2 = '/html/body/section/div[3]/div/div[1]/table[1]/tbody/tr[5]/td[3]' 
-    xp3= '/html/body/section/div[3]/div/div[1]/table[1]/tbody/tr[5]/td[2]' 
+    url0 = 'http://arxiv.org/list/cs.CV/recent'
+    # print url0
+    # xpath of each page
+    xp1 = '//dl[1]//*[@class="list-identifier"]//a[2]//@href'  # pdf href list
+    xp2 = '//dl[1]//*[@class="list-title mathjax"]/text()'  # Title: Object Boundary Guided Semantic Segmentation
+    xp_date = '//*[@id="dlpage"]/h3[1]/text()'  # date->folder
 
     htm0 = getHtml(url0)
-    cons1 = getContent(htm0, xp1)  
-    cons2 = getContent(htm0, xp2)   
-    cons3 = getContent(htm0, xp3)   
-    old_date=PORT_DATE
-    if cons1 is old_date:
-        return FALSE
-    else:
-        os.environ.set["PORT_DATE"]=cons1    
-        html = """      
-         <html>
-            <head> {0} </hdead>
-            <body>
-            <table cellspacing="0" border="1">
-                <tr>
-                    <td background: #F5FAFA; color: #797268;>{1}</td>
-                    <td background: #F5FAFA; color: #797268;>{2}</td>
-                </tr>
-            </table>
-            </body>
-        </html>"""
-        return html.format(cons1,cons3,cons2)
+    cons1 = getContent(htm0, xp1)  # get pdfs' href
+    cons2 = getContent(htm0, xp2)  # get papers' title
+    cons_date = getContent(htm0, xp_date)  # get date
+
+    folder = cons_date[0].split(', ')  # get date string
+
+    papertile=''
+    paperlink=''
+    paper=''
+    # judge the path exists or not
+    for indx in range(0, len(cons1)):
+        href = 'http://arxiv.org' + cons1[indx]
+        title = cons2[2 * indx + 1]
+        if (indx % 2) == 0:
+            paper=paper+'<tr><td>{0}</td><td><a href="{1}">{2}</td></tr>'.format(indx+1,href, title)
+        else:
+            paper=paper+'<tr><td background: #F5FAFA; color: #797268;>{0}</td><td background: #F5FAFA; color: #797268;><a href="{1}">{2}</td></tr>'.format(indx+1,href, title)
+
+    html = """      
+     <html>
+        <head> {0} </hdead>
+        <body>
+        <table cellspacing="0" border="1">
+                {1}
+        </table>
+        </body>
+    </html>"""
+    return html.format(folder[1],paper)
 
 
 def send_email():
@@ -64,7 +73,7 @@ def send_email():
     message = MIMEText(content, "html", MAIL_ENCODING)
     message["From"] = MAIL_SENDER #Header("paper", MAIL_ENCODING)
     message["To"] = MAIL_RECEIVER #Header("Reader")
-    message["Subject"] = Header("SS_Port", MAIL_ENCODING)
+    message["Subject"] = Header("SubscribePaper", MAIL_ENCODING)
     try:
         smtp_obj = smtplib.SMTP_SSL(MAIL_HOST)
         smtp_obj.login(MAIL_USER, MAIL_PASS)
